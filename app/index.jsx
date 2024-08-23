@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import { Text, View, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Index = () => {
@@ -11,19 +11,18 @@ const Index = () => {
   }, []);
 
   const generateDifferences = () => {
-    // In a real app, you'd have a set of images with known differences
-    // For this example, we'll use placeholder positions
+    // These values are now percentages of the image dimensions
     const newDifferences = [
-      { x: 80, y: 100 },
-      { x: 150, y: 200 },
-      { x: 250, y: 150 },
+      { x: 20, y: 30 },
+      { x: 50, y: 60 },
+      { x: 80, y: 45 },
     ];
     setDifferences(newDifferences);
   };
 
   const handlePress = (x, y) => {
     const found = differences.find(
-      (diff) => Math.abs(diff.x - x) < 20 && Math.abs(diff.y - y) < 20
+      (diff) => Math.abs(diff.x - x) < 5 && Math.abs(diff.y - y) < 5
     );
     if (found) {
       setScore((prevScore) => prevScore + 1);
@@ -37,63 +36,39 @@ const Index = () => {
         <Text className="text-2xl font-bold text-center mb-4">
           Spot the Difference
         </Text>
-        <View className="flex flex-col w-full space-y-2 justify-center items-center ">
+        <View className="w-full aspect-square relative">
           <Image
             source={require("../assets/images/img1.png")}
-            className="w-full h-[300px] rounded-lg"
+            className="w-full h-full rounded-lg"
           />
-          <Image
-            source={require("../assets/images/img1.png")}
-            className="w-full h-[300px] rounded-lg"
-          />
-
-          {differences.map((diff, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.diffSpot, { left: diff.x, top: diff.y }]}
-              onPress={() => handlePress(diff.x, diff.y)}
-            />
-          ))}
+          <View className="absolute top-0 left-0 w-full h-full">
+            {differences.map((diff, index) => (
+              <TouchableOpacity
+                key={index}
+                style={{
+                  position: 'absolute',
+                  width: '5%',
+                  height: '5%',
+                  left: `${diff.x}%`,
+                  top: `${diff.y}%`,
+                  backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                  borderRadius: 9999,
+                }}
+                onPress={() => handlePress(diff.x, diff.y)}
+              />
+            ))}
+          </View>
         </View>
-        <Text style={styles.score}>Score: {score}</Text>
+        <View className="w-full aspect-square mt-2">
+          <Image
+            source={require("../assets/images/img1.png")}
+            className="w-full h-full rounded-lg"
+          />
+        </View>
+        <Text className="text-lg mt-4">Score: {score}</Text>
       </View>
     </SafeAreaView>
   );
 };
 
 export default Index;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  gameArea: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    position: "relative",
-  },
-  image: {
-    width: 300,
-    height: 300,
-  },
-  diffSpot: {
-    position: "absolute",
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 0, 0, 0.5)",
-  },
-  score: {
-    fontSize: 18,
-    marginTop: 20,
-  },
-});
