@@ -1,107 +1,92 @@
-import { router } from "expo-router";
-import React, { useState, useEffect } from "react";
-import { Text, View, Image, TouchableOpacity, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 
-const Index = () => {
-  const [differences, setDifferences] = useState([]);
-  const [score, setScore] = useState(0);
-  const [foundDifferences, setFoundDifferences] = useState([]);
-
-  useEffect(() => {
-    generateDifferences();
-  }, []);
-
-  const generateDifferences = () => {
-    const newDifferences = [
-      { x: 12, y: 35, width: 20, height: 20 },
-      { x: 88, y: 70, width: 10, height: 8 },
-      { x: 68, y: 53, width: 7, height: 7 },
-      { x: 29, y: 65, width: 6, height: 9 },
-    ];
-    setDifferences(newDifferences);
-  };
-
-  const handlePress = (x, y, width, height) => {
-    const found = differences.find(
-      (diff) =>
-        Math.abs(diff.x - x) < width / 2 &&
-        Math.abs(diff.y - y) < height / 2
-    );
-    if (found) {
-      setScore((prevScore) => prevScore + 1);
-      setDifferences((prevDiffs) => prevDiffs.filter((diff) => diff !== found));
-      setFoundDifferences((prevFound) => [...prevFound, found]);
-    }
-  };
-
+// Custom icon component
+const Icon = ({ name, size = 24, color = "white" }) => {
+  // You would replace this with actual icon implementations
   return (
-    <SafeAreaView className="p-2">
-      <View className="flex flex-col items-center justify-start">
-        <Text className="text-2xl font-bold text-center mb-4">
-          Spot the Difference
-        </Text>
-        <View className="w-full aspect-square relative">
-          <Image
-            source={require("../assets/images/image-diff-1.png")}
-            className="w-full h-[300px] rounded-lg"
-          />
-          <View className="absolute top-0 left-0 w-full h-full">
-            {differences.map((diff, index) => (
-              <TouchableOpacity
-                className="absolute rounded-full opacity-50"
-                key={index}
-                style={{
-                  position: "absolute",
-                  width: `${diff.width}%`,
-                  height: `${diff.height}%`,
-                  left: `${diff.x - diff.width / 2}%`,
-                  top: `${diff.y - diff.height / 2}%`,
-                  backgroundColor: [
-                    "red",
-                    "blue",
-                    "green",
-                    "cyan",
-                  ][index % 4],
-                }}
-                onPress={() => handlePress(diff.x, diff.y, diff.width, diff.height)}
-              />
-            ))}
-            {foundDifferences.map((diff, index) => (
-              <View
-                key={`found-${index}`}
-                style={{
-                  position: "absolute",
-                  width: `${diff.width * 1.5}%`,
-                  height: `${diff.height * 1.5}%`,
-                  left: `${diff.x - (diff.width * 1.5) / 2}%`,
-                  top: `${diff.y - (diff.height * 1.5) / 2}%`,
-                  borderWidth: 2,
-                  borderColor: "yellow",
-                  borderRadius: 9999,
-                }}
-              />
-            ))}
-          </View>
-        </View>
-        <View className="w-full object-contain">
-          <Image
-            source={require("../assets/images/image-diff-2.jpeg")}
-            className="w-full h-[300px] rounded-lg"
-          />
-        </View>
-        <Text className="text-lg mt-4">Score: {score}</Text>
-      </View>
-      <Pressable
-        className="bg-blue-500 text-white p-2 rounded-md mt-4"
-        onPress={()=>{
-          router.push("/levels/1");
-        }}
-      >
-        <Text>Go to Level</Text>
-      </Pressable>
-    </SafeAreaView>
+    <View style={{ width: size, height: size, backgroundColor: color, borderRadius: size / 2 }} />
   );
 };
 
-export default Index;
+const SpotDifferenceHome = () => {
+  return (
+    <View className="flex-1 bg-purple-900 p-4">
+      {/* Top bar */}
+      <View className="flex-row justify-between items-center mb-4">
+        <View className="flex-row items-center bg-orange-400 rounded-full px-2 py-1">
+          <Text className="text-white mr-1">52.00</Text>
+          <TouchableOpacity>
+            <Icon name="plus" size={20} />
+          </TouchableOpacity>
+        </View>
+        <View className="flex-row items-center bg-green-500 rounded-full px-2 py-1">
+          <Text className="text-white mr-1">2.49</Text>
+          <TouchableOpacity>
+            <Icon name="plus" size={20} />
+          </TouchableOpacity>
+        </View>
+        <View className="flex-row items-center">
+          <Text className="text-white mr-1">60005</Text>
+          <Text className="text-yellow-400">★</Text>
+        </View>
+      </View>
+
+      {/* Main content */}
+      <View className="bg-purple-800 rounded-lg p-4">
+        <Text className="text-white text-2xl font-bold mb-4 text-center">Spot the Difference</Text>
+        
+        <View className="grid grid-cols-3 gap-4">
+          {/* Settings */}
+          <TouchableOpacity className="bg-orange-400 rounded-lg p-2 items-center">
+            <Icon name="cog" size={32} />
+            <Text className="text-white mt-1">Settings</Text>
+          </TouchableOpacity>
+
+          {/* Current Level */}
+          <TouchableOpacity className="bg-green-500 rounded-lg p-2 items-center">
+            <Icon name="play" size={32} />
+            <Text className="text-white mt-1">Current Level</Text>
+          </TouchableOpacity>
+
+          {/* Spin Wheel */}
+          <TouchableOpacity className="bg-blue-500 rounded-lg p-2 items-center">
+            <Icon name="gift" size={32} />
+            <Text className="text-white mt-1">Spin Wheel</Text>
+          </TouchableOpacity>
+
+          {/* Effects */}
+          <TouchableOpacity className="bg-purple-600 rounded-lg p-2 items-center">
+            <Icon name="award" size={32} />
+            <Text className="text-white mt-1">Effects</Text>
+          </TouchableOpacity>
+
+          {/* Challenges */}
+          <TouchableOpacity className="bg-yellow-500 rounded-lg p-2 items-center">
+            <Icon name="gift" size={32} />
+            <Text className="text-white mt-1">Challenges</Text>
+          </TouchableOpacity>
+
+          {/* Hints */}
+          <TouchableOpacity className="bg-red-500 rounded-lg p-2 items-center">
+            <Icon name="help-circle" size={32} />
+            <Text className="text-white mt-1">Hints</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Play button */}
+        <TouchableOpacity className="bg-green-500 rounded-full py-3 px-6 mt-6">
+          <Text className="text-white text-xl font-bold text-center">PLAY</Text>
+        </TouchableOpacity>
+
+        {/* Explore more levels */}
+        <TouchableOpacity className="flex-row justify-center items-center mt-4">
+          <Text className="text-white mr-2">Explore more levels</Text>
+          <Icon name="chevron-right" size={20} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+export default SpotDifferenceHome;

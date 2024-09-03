@@ -1,190 +1,457 @@
-import { router } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Text, View, Image, TouchableOpacity, Animated } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import CheckedBox from "./shared/checkedBox";
-import { Audio } from 'expo-av';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  Pressable,
+  Text,
+  Modal,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import Animated, {
+  useSharedValue,
+  withTiming,
+  withSpring,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
-const Level1 = () => {
-  const [differences, setDifferences] = useState([]);
-  const [score, setScore] = useState(0);
+
+
+const INITIAL_LIVES = 3;
+const MAX_STARS = 3;
+
+const ORIGINAL_IMAGE_WIDTH = 1000; // Replace with your image's actual width
+const ORIGINAL_IMAGE_HEIGHT = 750; // Replace with your image's actual height
+
+const gameLevels = [
+  {
+    id: 1,
+    leftImage: require("../../assets/images/image-diff-1.png"),
+    rightImage: require("../../assets/images/image-diff-2.jpeg"),
+    differences: [
+      { id: 1, x: 100, y: 277, width: 150, height: 150 },
+      { id: 2, x: 600, y: 487, width: 200, height: 150 },
+      { id: 3, x: 680, y: 397, width: 70, height: 52 },
+      { id: 4, x: 290, y: 487, width: 60, height: 112 },
+      { id: 5, x: 400, y: 337, width: 60, height: 67 },
+    ],
+  },
+  // Add more levels as needed
+];
+
+const SpotDifferenceGame = () => {
+  const [currentLevel, setCurrentLevel] = useState(gameLevels[0]);
   const [foundDifferences, setFoundDifferences] = useState([]);
-  const [hints, setHints] = useState(3);
+  const [developmentDifferences, setDevelopmentDifferences] = useState([]);
   const [wrongClick, setWrongClick] = useState(null);
-  const [isWrongClickVisible, setIsWrongClickVisible] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [lives, setLives] = useState(INITIAL_LIVES);
+  const [stars, setStars] = useState(MAX_STARS);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [levelCompleted, setLevelCompleted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+
+  // Shared values for reanimated modals
+  const gameOverOpacity = useSharedValue(0);
+  const levelCompletedOpacity = useSharedValue(0);
+  const gameOverScale = useSharedValue(0.5);
+  const levelCompletedScale = useSharedValue(0.5);
+
+  // useEffect(() => {
+  //   setDevelopmentDifferences(currentLevel.differences);
+  // }, [currentLevel]);
 
   useEffect(() => {
-    generateDifferences();
-  }, []);
-
-  useEffect(() => {
-    if (isWrongClickVisible) {
-      const timeout = setTimeout(() => {
-        setIsWrongClickVisible(false);
-        setWrongClick(null);
-      }, 500);
-
-      return () => clearTimeout(timeout);
+    if (lives === 0) {
+      setGameOver(true);
+      gameOverOpacity.value = withTiming(1);
+      gameOverScale.value = withSpring(1);
+    } else if (foundDifferences.length === currentLevel.differences.length) {
+      setLevelCompleted(true);
+      levelCompletedOpacity.value = withTiming(1);
+      levelCompletedScale.value = withSpring(1);
     }
-  }, [isWrongClickVisible]);
+  }, [lives, foundDifferences]);
 
-  const generateDifferences = () => {
-    const newDifferences = [
-      { id: 1, x: 12, y: 35, width: 5, height: 5 },
-      { id: 2, x: 88, y: 70, width: 10, height: 8 },
-      { id: 3, x: 68, y: 53, width: 7, height: 7 },
-      { id: 4, x: 29, y: 65, width: 6, height: 9 },
-      { id: 5, x: 40, y: 45, width: 6, height: 9 },
-    ];
-    setDifferences(newDifferences);
+  // useEffect(() => {
+  //   setDevelopmentDifferences(gameLevels[0].differences);
+  // }, [gameLevels[0].differences]);
+
+  const handleImageLayout = (event) => {
+    const { width, height } = event.nativeEvent.layout;
+    setImageDimensions({ width, height });
   };
 
-  const playSound = async (isCorrect) => {
-    // Uncomment and implement sound playing logic if needed
+  const getScaledCoordinates = (x, y, width, height) => {
+    const scaleX = imageDimensions.width / ORIGINAL_IMAGE_WIDTH;
+    const scaleY = imageDimensions.height / ORIGINAL_IMAGE_HEIGHT;
+    return {
+      x: x * scaleX,
+      y: y * scaleY,
+      width: width * scaleX,
+      height: height * scaleY,
+    };
   };
 
-  const handlePress2 = async (x, y) => {
-    const found = differences.find(
-      (diff) =>
-        Math.abs(diff.x - x) < diff.width / 2 && Math.abs(diff.y - y) < diff.height / 2
-    );
-     if(!found){
-      setWrongClick({ x, y });
-      setIsWrongClickVisible(true);
+  const handlePress = (event, isLeftImage) => {
+    const { locationX, locationY } = event.nativeEvent;
 
+    const found = currentLevel.differences.find((difference) => {
+      const { x, y, width, height } = getScaledCoordinates(
+        difference.x,
+        difference.y,
+        difference.width,
+        difference.height
+      );
 
-     }
-  };
+      return (
+        locationX >= x &&
+        locationX <= x + width &&
+        locationY >= y &&
+        locationY <= y + height
+      );
+    });
 
-
-  const handlePress = async (x, y) => {
-    const found = differences.find(
-      (diff) =>
-        Math.abs(diff.x - x) < diff.width / 2 && Math.abs(diff.y - y) < diff.height / 2
-    );
-  
-    if (found && !foundDifferences.some((f) => f.id === found.id)) {
+    if (found) {
+      setFoundDifferences((prev) => [...prev, found.id]);
       setWrongClick(null);
-      setIsWrongClickVisible(false);
-      setScore((prevScore) => prevScore + 1);
-      setFoundDifferences((prevFound) => [...prevFound, found]);
-
-   
+    } else {
+      setWrongClick({ x: locationX, y: locationY, isLeftImage });
+      setLives((prev) => Math.max(0, prev - 1));
     }
   };
 
-  const useHint = () => {
-    if (hints > 0 && foundDifferences.length < differences.length) {
-      const notFound = differences.find(diff => !foundDifferences.some(f => f.id === diff.id));
-      setFoundDifferences(prev => [...prev, notFound]);
-      setHints(prev => prev - 1);
-      setScore(prev => prev + 1);
+  const handleHint = () => {
+    if (hintsUsed < MAX_STARS) {
+      const unfoundDifferences = currentLevel.differences.filter(
+        (difference) => !foundDifferences.includes(difference.id)
+      );
+
+      if (unfoundDifferences.length > 0) {
+        const nextDifference = unfoundDifferences[0];
+        setFoundDifferences((prev) => [...prev, nextDifference.id]);
+        setHintsUsed((prev) => prev + 1);
+        setStars((prev) => Math.max(0, prev - 1));
+      }
+    }
+  };
+  const renderFoundDifferences = () => {
+    return foundDifferences.map((differenceId) => {
+      const difference = currentLevel.differences.find(
+        (d) => d.id === differenceId
+      );
+      if (!difference) return null;
+
+      const { x, y, width, height } = getScaledCoordinates(
+        difference.x,
+        difference.y,
+        difference.width,
+        difference.height
+      );
+
+      const style = {
+        position: "absolute",
+        left: x,
+        top: y,
+        width: width,
+        height: height,
+        borderWidth: 4,
+        borderColor: "red",
+        borderRadius: 50,
+      };
+
+      return <View key={difference.id} style={style} />;
+    });
+  };
+
+  const renderDevelopmentDifferences = () => {
+    return developmentDifferences.map((difference) => {
+      const { x, y, width, height } = getScaledCoordinates(
+        difference.x,
+        difference.y,
+        difference.width,
+        difference.height
+      );
+
+      const style = {
+        position: "absolute",
+        left: x,
+        top: y,
+        width: width,
+        height: height,
+        borderWidth: 4,
+        borderColor: "blue",
+        borderRadius: 50,
+      };
+
+      return <View key={difference.id} style={style} />;
+    });
+  };
+
+  const renderWrongClick = () => {
+    if (!wrongClick) return null;
+
+    const style = {
+      position: "absolute",
+      left: wrongClick.x - 10,
+      top: wrongClick.y - 10,
+      width: 20,
+      height: 20,
+    };
+
+    return (
+      <View style={style}>
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 9,
+            width: "100%",
+            height: 2,
+            backgroundColor: "red",
+            transform: [{ rotate: "45deg" }],
+          }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 9,
+            width: "100%",
+            height: 2,
+            backgroundColor: "red",
+            transform: [{ rotate: "-45deg" }],
+          }}
+        />
+      </View>
+    );
+  };
+
+  const renderDifferenceCheckboxes = () => {
+    return currentLevel.differences.map((_, index) => (
+      <View key={index} style={{ marginRight: 5 }}>
+        <Ionicons
+          name={index < foundDifferences.length ? "checkbox" : "square-outline"}
+          size={24}
+          color="black"
+        />
+      </View>
+    ));
+  };
+
+  const renderStars = () => {
+    return Array(MAX_STARS)
+      .fill(0)
+      .map((_, index) => (
+        <Ionicons
+          key={index}
+          name={index < stars ? "star" : "star-outline"}
+          size={24}
+          color="black"
+        />
+      ));
+  };
+
+  const renderLives = () => {
+    return Array(INITIAL_LIVES)
+      .fill(0)
+      .map((_, index) => (
+        <Ionicons
+          key={index}
+          name={index < lives ? "heart" : "heart-outline"}
+          size={24}
+          color="red"
+        />
+      ));
+  };
+
+  const restartGame = () => {
+    setLives(INITIAL_LIVES);
+    setStars(MAX_STARS);
+    setFoundDifferences([]);
+    setHintsUsed(0);
+    setLevelCompleted(false);
+    setGameOver(false);
+    gameOverOpacity.value = 0;
+    levelCompletedOpacity.value = 0;
+    gameOverScale.value = 0.5;
+    levelCompletedScale.value = 0.5;
+  };
+
+  const handleNextLevel = () => {
+    const nextLevelIndex =
+      gameLevels.findIndex((level) => level.id === currentLevel.id) + 1;
+    if (nextLevelIndex < gameLevels.length) {
+      setCurrentLevel(gameLevels[nextLevelIndex]);
+      restartGame();
     }
   };
 
-  console.log("IsWrongClickVisible", isWrongClickVisible);
+  const gameOverAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: gameOverOpacity.value,
+      transform: [{ scale: gameOverScale.value }],
+    };
+  });
+
+  const levelCompletedAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: levelCompletedOpacity.value,
+      transform: [{ scale: levelCompletedScale.value }],
+    };
+  });
   return (
-    <SafeAreaView className="h-screen bg-[#DCD6F7] flex flex-col justify-between">
-      <View className="flex flex-row items-center justify-between p-2">
-        <Text className="text-2xl font-bold p-2 my-4 text-[#141E46]">
-          Level 1
-        </Text>
-        <TouchableOpacity onPress={useHint} className="bg-blue-500 p-2 rounded">
-          <Text className="text-white">Hint ({hints})</Text>
+    <SafeAreaView className="h-screen bg-[#DCD6F7] flex flex-col pt-8">
+      <View className="flex-row justify-between items-center p-4">
+        <Text className="text-lg font-bold">Level {currentLevel.id}</Text>
+        <View className="flex-row">{renderStars()}</View>
+        <Ionicons name="settings-outline" size={24} color="black" />
+      </View>
+
+      <View className="flex-row justify-center items-center p-2">
+        {renderDifferenceCheckboxes()}
+      </View>
+
+      <View className="flex-1">
+        <Pressable
+          onPress={(e) => handlePress(e, true)}
+          onLayout={handleImageLayout}
+        >
+          <View
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: ORIGINAL_IMAGE_WIDTH / ORIGINAL_IMAGE_HEIGHT,
+            }}
+          >
+            <Image
+              source={currentLevel.leftImage}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="contain"
+            />
+            {renderFoundDifferences()}
+            {renderDevelopmentDifferences()}
+            {wrongClick && wrongClick.isLeftImage && renderWrongClick()}
+          </View>
+        </Pressable>
+      </View>
+
+      <View className="flex-1">
+        <Pressable onPress={(e) => handlePress(e, false)}>
+          <View
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: ORIGINAL_IMAGE_WIDTH / ORIGINAL_IMAGE_HEIGHT,
+            }}
+          >
+            <Image
+              source={currentLevel.rightImage}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="contain"
+            />
+            {renderFoundDifferences()}
+            {wrongClick && !wrongClick.isLeftImage && renderWrongClick()}
+          </View>
+        </Pressable>
+      </View>
+
+      <View className="flex-row justify-between items-center p-4">
+        <View className="flex-row">{renderLives()}</View>
+        <TouchableOpacity onPress={handleHint}>
+          <Text className="text-blue-500 font-bold">Hint</Text>
         </TouchableOpacity>
       </View>
 
-      <View className="flex flex-row items-center p-2 flex-wrap">
-        <Text className="text-lg font-bold p-2 text-[#141E46]">
-          Differences: {foundDifferences.length}/{differences.length}
-        </Text>
-        {differences.map((_, index) => (
-          <View key={index} className="flex flex-row items-center p-2">
-            {foundDifferences[index] ? (
-              <CheckedBox />
-            ) : (
-              <View className="w-6 h-6 border-2 border-[#141E46] rounded-lg flex items-center justify-center" />
-            )}
-          </View>
-        ))}
-      </View>
-
-      <View className="flex flex-row justify-center">
-        {[1, 2, 3].map((star) => (
-          <Text key={star} className={`text-3xl ${star <= foundDifferences.length ? 'text-yellow-500' : 'text-gray-300'}`}>
-            ★
-          </Text>
-        ))}
-      </View>
-
-      <View className="flex flex-col items-center justify-start p-2 rounded-xl mb-4 space-y-4">
-        {[1, 2].map((imageIndex) => (
-          <View key={imageIndex} className="w-full relative border-2 border-blue-500 rounded-lg">
-            <Image
-              source={imageIndex === 1 ? require("../../assets/images/image-diff-1.png") : require("../../assets/images/image-diff-2.jpeg")}
-              className="w-full h-[300px]"
-            />
-            <View
-              className="absolute top-0 left-0 w-full h-full"
-              onTouchStart={(e) => handlePress2(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+      <Modal visible={gameOver} transparent animationType="fade">
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            },
+            gameOverAnimatedStyle,
+          ]}
+        >
+          <View
+            style={{
+              width: 300,
+              padding: 20,
+              backgroundColor: "white",
+              borderRadius: 10,
+            }}
+          >
+            <Text
+              style={{ textAlign: "center", fontSize: 24, marginBottom: 20 }}
             >
-              {differences.map((diff) => (
-                <TouchableOpacity
-                  key={`${imageIndex}-${diff.id}`}
-                  className="absolute rounded-full opacity-50 bg-red-500"
-                  style={{
-                    position: "absolute",
-                    width: `${diff.width}%`,
-                    height: `${diff.height}%`,
-                    left: `${diff.x - diff.width / 2}%`,
-                    top: `${diff.y - diff.height / 2}%`,
-                  }}
-                  onPress={() =>{
-                   
-                    handlePress(diff.x, diff.y);
-                  }}
-                />
-              ))}
-              {foundDifferences.map((diff) => (
-                <View
-                  key={`found-${imageIndex}-${diff.id}`}
-                  style={{
-                    position: "absolute",
-                    width: `${diff.width * 1.5}%`,
-                    height: `${diff.height * 1.5}%`,
-                    left: `${diff.x - (diff.width * 1.5) / 2}%`,
-                    top: `${diff.y - (diff.height * 1.5) / 2}%`,
-                    borderWidth: 2,
-                    borderColor: "yellow",
-                    borderRadius: 9999,
-                  }}
-                />
-              ))}
-              {isWrongClickVisible && wrongClick && (
-                <Animated.View
-                  style={{
-                    position: "absolute",
-                    width: 30,
-                    height: 30,
-                    left: wrongClick.x - 15,
-                    top: wrongClick.y - 15,
-                    backgroundColor: "red",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: 0.8,
-                    transform: [{ scale: 1 }],
-                  }}
-                >
-                  <Text style={{ color: "white", fontSize: 20 }}>X</Text>
-                </Animated.View>
-              )}
-            </View>
+              Game Over
+            </Text>
+            <Pressable
+              style={{
+                backgroundColor: "red",
+                padding: 10,
+                borderRadius: 5,
+                marginTop: 10,
+              }}
+              onPress={restartGame}
+            >
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Restart Game
+              </Text>
+            </Pressable>
           </View>
-        ))}
-        <Text className="text-lg mt-4">Score: {score}</Text>
-      </View>
+        </Animated.View>
+      </Modal>
+
+      <Modal visible={levelCompleted} transparent animationType="fade">
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            },
+            levelCompletedAnimatedStyle,
+          ]}
+        >
+          <View
+            style={{
+              width: 300,
+              padding: 20,
+              backgroundColor: "white",
+              borderRadius: 10,
+            }}
+          >
+            <Text
+              style={{ textAlign: "center", fontSize: 24, marginBottom: 20 }}
+            >
+              Level Completed
+            </Text>
+            <Pressable
+              style={{
+                backgroundColor: "green",
+                padding: 10,
+                borderRadius: 5,
+                marginTop: 10,
+              }}
+              onPress={handleNextLevel}
+            >
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Next Level
+              </Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-export default Level1;
+export default SpotDifferenceGame;
