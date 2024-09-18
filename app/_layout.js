@@ -1,28 +1,33 @@
-import React from "react";
-import { Stack } from "expo-router";
-
+import React, { useEffect } from "react";
+import { Slot } from "expo-router";
+import { useFonts } from 'expo-font';
+import * as SplashScreen from "expo-splash-screen";
 
 const HomePageLayout = () => {
-  return (
-   
-      <Stack
-      screenOptions={{
-        headerShown: false,
-        statusBarHidden: true,
-        animation: "fade",
-      }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerShown: false,
-          }}
-        />
-       
-      </Stack>
-    
-   
-  );
+  const [fontsLoaded] = useFonts({
+    "Jakarta-Bold": require("../assets/fonts/PlusJakartaSans-Bold.ttf"),
+    "Jakarta-ExtraBold": require("../assets/fonts/PlusJakartaSans-ExtraBold.ttf"),
+    "Jakarta-ExtraLight": require("../assets/fonts/PlusJakartaSans-ExtraLight.ttf"),
+    "Jakarta-Light": require("../assets/fonts/PlusJakartaSans-Light.ttf"),
+    "Jakarta-Medium": require("../assets/fonts/PlusJakartaSans-Medium.ttf"),
+   " Jakarta": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
+    "Jakarta-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+  });
+
+  useEffect(() => {
+    const hideSplashScreen = async () => {
+      if (fontsLoaded) {
+        await SplashScreen.hideAsync();
+      }
+    };
+    hideSplashScreen();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null; // Don't render anything if fonts aren't loaded
+  }
+
+  return <Slot />;
 };
 
 export default HomePageLayout;

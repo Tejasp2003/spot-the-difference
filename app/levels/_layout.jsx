@@ -7,20 +7,7 @@ const _layout = () => {
   return (
    
     
-   <Stack
-   screenOptions={{
-        headerShown: false,
-        animation: "fade",
-
-        
-
-
-   }}
-
-    name="index"
-    component={require("../components/Level1").default}
-    style={{ flex: 1 }}
-   />
+      <Slot />
   
   )
 }
