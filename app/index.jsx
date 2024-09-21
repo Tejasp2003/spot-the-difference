@@ -24,10 +24,13 @@ import { Audio } from "expo-av";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import SettingsModal from "@/components/modals/SettingModal";
 import DailyTaskModal from "@/components/modals/TaskListModal";
+import DailyRewardModal from "@/components/modals/DailyRewards";
 
 const HomePage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showTaskListModal, setShowTaskListModal] = useState(false);
+  const [showDailyRewardModal, setShowDailyRewardModal] = useState(false);
+
 
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(0.9);
@@ -240,6 +243,7 @@ const HomePage = () => {
           <Animated.View
             className="flex items-center  absolute top-48 right-2"
             style={[calendarAnimStyle]}
+            onPress={() => setShowDailyRewardModal(true)}
           >
             <Image
               source={require("../assets/images/daily-reward-6.png")}
@@ -350,6 +354,8 @@ const HomePage = () => {
         </Animated.View>
         <SettingsModal isVisible={isModalVisible} onClose={closeModal} />
         <DailyTaskModal isVisible={showTaskListModal} onClose={() => setShowTaskListModal(false)} />
+        <DailyRewardModal isVisible={showDailyRewardModal} onClose={() => setShowDailyRewardModal(false)}
+        />
       </SafeAreaView>
     </ImageBackground>
   );
