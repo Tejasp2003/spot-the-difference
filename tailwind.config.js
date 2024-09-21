@@ -1,3 +1,5 @@
+
+
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
   theme: {
@@ -10,6 +12,8 @@ module.exports = {
         JakartaLight: ["Jakarta-Light", "sans-serif"],
         JakartaMedium: ["Jakarta-Medium", "sans-serif"],
         JakartaSemiBold: ["Jakarta-SemiBold", "sans-serif"],
+        UnlockRegular: ["Unlock-Regular", "sans-serif"],
+        
       },
       "animation": {
         shimmer: "shimmer 1s linear infinite"

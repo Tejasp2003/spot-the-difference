@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -22,8 +22,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { Audio } from "expo-av";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
+import SettingsModal from "@/components/modals/SettingModal";
+import DailyTaskModal from "@/components/modals/TaskListModal";
 
 const HomePage = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showTaskListModal, setShowTaskListModal] = useState(false);
+
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(0.9);
   const buttonScale = useSharedValue(1);
@@ -158,6 +163,14 @@ const HomePage = () => {
     outputRange: [0, 200],
   });
 
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+  };
+
   return (
     <ImageBackground
       source={require("../assets/images/home-bg-10.png")}
@@ -173,7 +186,12 @@ const HomePage = () => {
         >
           {/* Header */}
           <View className="flex flex-row items-center justify-between w-full p-4">
-            <TouchableOpacity onPress={rotateSettingsButton}>
+            <TouchableOpacity
+              onPress={() => {
+                rotateSettingsButton();
+                openModal();
+              }}
+            >
               <Animated.View
                 className="bg-[#eed663] rounded-[28px] p-2"
                 style={[settingsAnimStyle]}
@@ -185,22 +203,16 @@ const HomePage = () => {
               <View
                 className="flex flex-row items-center bg-[#a9ebd8] rounded-[28px] p-1
                 border border-[#0e3b15]"
-                
               >
                 <Image
                   source={require("../assets/images/coin-icon.png")}
                   className="w-[38px] h-[38px] object-contain"
                 />
-                <Text
-                  className="text-[#10442f] text-[22px] font-extrabold mx-1"
-                >
+                <Text className="text-[#10442f] text-[22px] font-extrabold mx-1">
                   100
                 </Text>
-              
-                  <Icon name="add-circle" size={26} color="#000"
-                
-                  />
-               
+
+                <Icon name="add-circle" size={26} color="#000" />
               </View>
             </TouchableOpacity>
           </View>
@@ -248,32 +260,26 @@ const HomePage = () => {
 
           {/* Buttons */}
           <View className="flex items-center justify-center space-y-4 mt-8 ">
-            
-              <TouchableOpacity
-                onPress={() => {
-                  animateButton();
-                  setTimeout(() => router.push(`/levels/1`));
-                }}
-              >
-                <View
-                  className="flex items-center flex-row justify-center bg-[#efeb70] rounded-xl p-1 px-2 space-x-2
+            <TouchableOpacity
+              onPress={() => {
+                animateButton();
+                setTimeout(() => router.push(`/levels/1`));
+              }}
+            >
+              <View
+                className="flex items-center flex-row justify-center bg-[#efeb70] rounded-xl p-1 px-2 space-x-2
                 border-2 border-[#0e3b15]
                 "
-                >
-                  <Image
-                    source={require("../assets/images/play-button-icon-1.png")}
-                    className="w-[60px] h-[60px] object-contain"
-                  />
-                  <Text
-                    className="text-[#143d1a] text-3xl font-extrabold
-                   
-                    "
-                  >
-                    Continue
-                  </Text>
-                </View>
-              </TouchableOpacity>
-          
+              >
+                <Image
+                  source={require("../assets/images/play-button-icon-1.png")}
+                  className="w-[60px] h-[60px] object-contain"
+                />
+                <Text className="text-[#143d1a] text-3xl font-extrabold">
+                  Continue
+                </Text>
+              </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={{ width: "100%" }}
@@ -313,7 +319,12 @@ const HomePage = () => {
                  className="absolute bottom-[10px] right-[25px] w-[40px] h-[15px] object-contain aspect-auto"
                 /> */}
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                animateButton();
+                setTimeout(() => setShowTaskListModal(true), 200);
+              }}
+            >
               <Animated.View
                 style={[calendarAnimStyle]}
                 className=" bg-[#4353e4] rounded-full p-1"
@@ -337,6 +348,8 @@ const HomePage = () => {
             </TouchableOpacity>
           </View>
         </Animated.View>
+        <SettingsModal isVisible={isModalVisible} onClose={closeModal} />
+        <DailyTaskModal isVisible={showTaskListModal} onClose={() => setShowTaskListModal(false)} />
       </SafeAreaView>
     </ImageBackground>
   );

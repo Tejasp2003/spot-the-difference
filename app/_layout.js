@@ -12,6 +12,11 @@ const HomePageLayout = () => {
     "Jakarta-Medium": require("../assets/fonts/PlusJakartaSans-Medium.ttf"),
    " Jakarta": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
     "Jakarta-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+    "Unlock-Regular": require("../assets/fonts/Unlock-Regular.ttf"),
+    "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
+    "Poppins-BlackItalic": require("../assets/fonts/Poppins-BlackItalic.ttf"),
+  
+
   });
 
   useEffect(() => {
